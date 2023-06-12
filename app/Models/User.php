@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Traits\UUID;
 use App\Models\DetailResto;
+use App\Models\DetailDriver;
+use App\Models\DetailCustomer;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -48,9 +50,19 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    public function detailUser()
+    public function detailResto()
     {
         return $this->hasOne(DetailResto::class, 'user_id');
+    }
+
+    public function detailCustomer()
+    {
+        return $this->hasOne(DetailCustomer::class, 'user_id');
+    }
+
+    public function detailDriver()
+    {
+        return $this->hasOne(DetailDriver::class, 'user_id');
     }
 
     public function produk()

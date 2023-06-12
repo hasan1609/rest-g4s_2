@@ -19,7 +19,7 @@ class AuthController extends Controller
                 'password' => ['required'],
             ]);
 
-            $user = User::where('email', $credentials['email'])->with('detailUser')->first();
+            $user = User::where('email', $credentials['email'])->with('detailResto')->first();
 
             if (!$user) {
                 return response()->json(['error' => 'Email Tidak Terdaftar'], Response::HTTP_UNAUTHORIZED);

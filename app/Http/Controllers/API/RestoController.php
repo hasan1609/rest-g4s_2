@@ -55,7 +55,7 @@ class RestoController extends Controller
                 'role' => 'resto'
             ]);
             if ($user) {
-                $user->detailUser()->create([
+                $user->detailResto()->create([
                     'nik' => $request->nik,
                     'tlp' => $request->tlp,
                     'tempat_lahir' => $request->tempat_lahir,
@@ -119,7 +119,7 @@ class RestoController extends Controller
     public function show($id)
     {
         //
-        $resto = User::with('detailUser')->findOrFail($id);
+        $resto = User::with('detailResto')->findOrFail($id);
         try {
             return $this->handleResponse('Data Resto', $resto, Response::HTTP_OK);
         } catch (QueryException $e) {
