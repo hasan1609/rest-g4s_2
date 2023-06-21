@@ -25,7 +25,6 @@ class CreateDetailDriversTable extends Migration
             $table->string('kendaraan');
             $table->string('plat_no');
             $table->string('thn_kendaraan');
-            $table->string('tlp')->unique();
             $table->string('latitude')->nullable();
             $table->string('longitude')->nullable();
             $table->enum('status_akun', ['proses', 'tolak', 'aktif'])->default('proses');

@@ -42,12 +42,13 @@ Route::post('/status/resto/{id}', [RestoController::class, 'updateStatusResto'])
 Route::post('/resto/{id}', [RestoController::class, 'update']);
 // GET RESTO BY ID
 Route::get('/resto/{id}', [RestoController::class, 'show']);
+// GET RESTO TERDEKAT
+Route::get('/nearby/resto/{latitude}&{longitude}', [RestoController::class, 'restoTerdekat']);
+
 
 // DRIVER
 // ADD DRIVER
 Route::post('/driver', [DriverController::class, 'register']);
-
-
 
 // Produk
 Route::get('/produk', [ProdukController::class, 'index']);

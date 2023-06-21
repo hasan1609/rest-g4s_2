@@ -16,7 +16,6 @@ class CreateDetailCustomersTable extends Migration
         Schema::create('detail_customers', function (Blueprint $table) {
             $table->uuid('id_detail')->primary();
             $table->uuid('user_id');
-            $table->string('tlp')->unique();
             $table->string('alamat')->nullable();
             $table->string('latitude')->nullable();
             $table->string('longitude')->nullable();

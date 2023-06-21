@@ -36,13 +36,13 @@ class CustomerController extends Controller
             $user = User::create([
                 'nama' => $request->nama,
                 'email' => $request->email,
+                'tlp' => $request->email,
                 'password' => password_hash($request->password, PASSWORD_DEFAULT),
                 'role' => 'customer'
             ]);
     
             if ($user) {
                 $user->detailCustomer()->create([
-                    'tlp' => $request->tlp,
                     'foto' => null, // Set foto to null initially
                 ]);
     

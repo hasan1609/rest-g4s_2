@@ -28,7 +28,6 @@ class DetailDriver extends Model
         'kendaraan',
         'plat_no',
         'thn_kendaraan',
-        'tlp',
         'latitude',
         'longitude',
         'status_akun',

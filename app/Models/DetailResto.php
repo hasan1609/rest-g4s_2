@@ -20,7 +20,6 @@ class DetailResto extends Model
     protected $fillable = [
         'user_id',
         'nik',
-        'tlp',
         'tempat_lahir',
         'ttl',
         'alamat',

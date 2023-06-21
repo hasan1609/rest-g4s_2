@@ -29,7 +29,6 @@ class RestoController extends Controller
             'alamat' => 'required',
             "jam_buka" => 'date_format:H:i',
             "jam_tutup" => 'date_format:H:i',
-            'foto' => 'required|image|mimes:jpeg,png,jpg|max:5048',
             'nama_resto' => 'required',
             'email' => 'required|email',
             'password' => 'required|min:8',
@@ -51,13 +50,13 @@ class RestoController extends Controller
             $user = User::create([
                 'nama' => $request->nama,
                 'email' => $request->email,
+                'tlp' => $request->tlp,
                 'password' => password_hash($request->password, PASSWORD_DEFAULT),
                 'role' => 'resto'
             ]);
             if ($user) {
                 $user->detailResto()->create([
                     'nik' => $request->nik,
-                    'tlp' => $request->tlp,
                     'tempat_lahir' => $request->tempat_lahir,
                     'ttl' => $request->ttl,
                     'alamat' => $request->alamat,
@@ -66,12 +65,18 @@ class RestoController extends Controller
                     'nama_resto' => $request->nama_resto,
                     'status_toko' => "tutup",
                     'status_akun' => "proses",
-                    'foto' => $request->foto,
+                    'foto' => null,
                 ]);
-                $resize = Image::make($image)->resize(300, null, function ($constraint) {
-                    $constraint->aspectRatio();
-                });
-                $resize->save(public_path('images/resto/' . $filename));
+                if ($image = $request->file('foto')) {
+                    $filename = date('YmdHis') . "." . $image->getClientOriginalExtension();
+                    $request->foto = '/public/images/resto/' . $filename;
+                    $user->detailResto->foto = $request->foto; // Update foto value
+                    $resize = Image::make($image)->resize(300, null, function ($constraint) {
+                        $constraint->aspectRatio();
+                    });
+                    $resize->save(public_path('images/resto/' . $filename));
+                }
+                $user->detailResto->save();
             }
             DB::commit();
 
@@ -173,5 +178,26 @@ class RestoController extends Controller
             }
             return $this->handleError($e->errorInfo);
         }
+    }
+
+    // get resto terdekat
+    public function restoTerdekat($lat, $long)
+    {
+        // $resto = DB::table('detail_restos')
+        //     ->select("detail_restos.*", DB::raw("(((acos(sin((" . $lat . "*pi()/180)) * sin((`latitude`*pi()/180)) + cos((" . $lat . "*pi()/180)) * cos((`latitude`*pi()/180)) * cos(((" . $long . "- `longitude`) * pi()/180)))) * 180/pi()) * 60 * 1.1515 * 1.609344) as distance
+        // "))
+        //     ->having('distance', '<', 5)
+        //     ->get();
+
+        $distance = 5; // Jarak dalam kilometer
+        $resto = DetailResto::selectRaw("*, (((acos(sin((? * pi()/180)) * sin((latitude*pi()/180)) + cos((? * pi()/180)) * cos((latitude*pi()/180)) * cos(((? - longitude) * pi()/180)))) * 180/pi()) * 60 * 1.1515 * 1.609344) as distance", [$lat, $lat, $long])
+            ->having('distance', '<', $distance)
+            ->with('user')
+            ->get();
+
+        if (!$resto) {
+            return $this->handleError('Tidak Resto Terdekat', [], Response::HTTP_NOT_FOUND);
+        } else
+            return $this->handleResponse('Data Resto Terdekat', $resto, Response::HTTP_OK);
     }
 }

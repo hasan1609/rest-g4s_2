@@ -17,7 +17,6 @@ class CreateDetailRestosTable extends Migration
             $table->uuid('id_detail')->primary();
             $table->uuid('user_id');
             $table->string('nik')->unique();
-            $table->string('tlp')->unique();
             $table->string('tempat_lahir');
             $table->date('ttl');
             $table->string('alamat');

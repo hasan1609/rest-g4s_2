@@ -52,6 +52,7 @@ class DriverController extends Controller
             $user = User::create([
                 'nama' => $request->nama,
                 'email' => $request->email,
+                'tlp' => $request->email,
                 'password' => password_hash($request->password, PASSWORD_DEFAULT),
                 'role' => 'driver'
             ]);
@@ -68,7 +69,6 @@ class DriverController extends Controller
                     'status_driver' => $request->status_driver,
                     'plat_no' => $request->plat_no,
                     'thn_kendaraan' => $request->thn_kendaraan,
-                    'tlp' => $request->tlp,
                 ]);
                 $resize = Image::make($image)->resize(300, null, function ($constraint) {
                     $constraint->aspectRatio();

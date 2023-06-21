@@ -19,7 +19,6 @@ class DetailCustomer extends Model
     public $primaryKey = 'id_detail';
     protected $fillable = [
         'user_id',
-        'tlp',
         'alamat',
         'latitude',
         'longitude',
