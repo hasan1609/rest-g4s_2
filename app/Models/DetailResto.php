@@ -37,4 +37,9 @@ class DetailResto extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'id_user');
     }
+
+    public function produk()
+    {
+        return $this->hasMany(Produk::class, 'user_id', 'user_id');
+    }
 }

@@ -189,10 +189,10 @@ class RestoController extends Controller
         //     ->having('distance', '<', 5)
         //     ->get();
 
-        $distance = 5; // Jarak dalam kilometer
-        $resto = DetailResto::selectRaw("*, (((acos(sin((? * pi()/180)) * sin((latitude*pi()/180)) + cos((? * pi()/180)) * cos((latitude*pi()/180)) * cos(((? - longitude) * pi()/180)))) * 180/pi()) * 60 * 1.1515 * 1.609344) as distance", [$lat, $lat, $long])
-            ->having('distance', '<', $distance)
+        $resto = DetailResto::select('*', DB::raw('ROUND((6371 * acos(cos(radians(' . $lat . ')) * cos(radians(latitude)) * cos(radians(longitude) - radians(' . $long . ')) + sin(radians(' . $lat . ')) * sin(radians(latitude)))), 2) AS distance'))
+            ->having('distance', '<', 5)
             ->with('user')
+            ->with('produk')
             ->get();
 
         if (!$resto) {

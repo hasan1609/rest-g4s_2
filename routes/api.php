@@ -49,6 +49,12 @@ Route::get('/nearby/resto/{latitude}&{longitude}', [RestoController::class, 'res
 // DRIVER
 // ADD DRIVER
 Route::post('/driver', [DriverController::class, 'register']);
+// GET ALL DRIVER
+Route::get('/driver', [DriverController::class, 'index']);
+// GET BY ID DRIVER
+Route::get('/driver/{id}', [DriverController::class, 'getByIdDriver']);
+// UPDATE DRIVER
+Route::post('/driver/{id}', [DriverController::class, 'update']);
 
 // Produk
 Route::get('/produk', [ProdukController::class, 'index']);
@@ -57,7 +63,7 @@ Route::post('/produk', [ProdukController::class, 'store']);
 // GET produk BY ID produk
 Route::get('/produk/{id}', [ProdukController::class, 'show']);
 // GET produk BY ID Resto
-Route::get('/resto/produk/{id}', [ProdukController::class, 'getProdukById']);
+Route::get('/resto/produk/{id}/{lat}&{long}', [ProdukController::class, 'getByIdResto']);
 // EDIT produk BY ID
 Route::post('/produk/{id}', [ProdukController::class, 'update']);
 // DELETE produk BY ID

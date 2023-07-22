@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Produk;
+use App\Models\DetailResto;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
@@ -28,6 +29,18 @@ class ProdukController extends Controller
     {
         $produk = Produk::where('user_id', $id)
             ->where('kategori', $kategori)
+            ->get();
+        return $this->handleResponse('Data Produk', $produk, Response::HTTP_OK);
+    }
+
+    // GET KATEGORY PRODUK
+    public function getByIdResto($id, $lat, $long)
+    {
+
+        $produk = DetailResto::select('*', DB::raw('ROUND((6371 * acos(cos(radians(' . $lat . ')) * cos(radians(latitude)) * cos(radians(longitude) - radians(' . $long . ')) + sin(radians(' . $lat . ')) * sin(radians(latitude)))), 2) AS distance'))
+            ->where('user_id', $id)
+            ->with('user')
+            ->with('produk')
             ->get();
         return $this->handleResponse('Data Produk', $produk, Response::HTTP_OK);
     }
