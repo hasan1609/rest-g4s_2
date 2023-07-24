@@ -86,9 +86,15 @@ class DriverController extends Controller
         }
     }
 
-    public function index()
+    public function getMotor()
     {
-        $driver = User::where('role', 'driver')->with('detailDriver')->get();
+        $driver = DetailDriver::where('status_driver', 'motor')->with('user')->get();
+        return $this->handleResponse('Data Driver', $driver, Response::HTTP_OK);
+    }
+
+    public function getMobil()
+    {
+        $driver = DetailDriver::where('status_driver', 'mobil')->with('user')->get();
         return $this->handleResponse('Data Driver', $driver, Response::HTTP_OK);
     }
 

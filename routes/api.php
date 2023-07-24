@@ -50,7 +50,8 @@ Route::get('/nearby/resto/{latitude}&{longitude}', [RestoController::class, 'res
 // ADD DRIVER
 Route::post('/driver', [DriverController::class, 'register']);
 // GET ALL DRIVER
-Route::get('/driver', [DriverController::class, 'index']);
+Route::get('/driver/motor', [DriverController::class, 'getMotor']);
+Route::get('/driver/mobil', [DriverController::class, 'getMobil']);
 // GET BY ID DRIVER
 Route::get('/driver/{id}', [DriverController::class, 'getByIdDriver']);
 // UPDATE DRIVER
