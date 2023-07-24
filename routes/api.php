@@ -54,7 +54,9 @@ Route::get('/driver', [DriverController::class, 'index']);
 // GET BY ID DRIVER
 Route::get('/driver/{id}', [DriverController::class, 'getByIdDriver']);
 // UPDATE DRIVER
-Route::post('/driver/{id}', [DriverController::class, 'update']);
+Route::post('/driver/update/{id}', [DriverController::class, 'update']);
+// DELETE DRIVER
+Route::post('/driver/delete/{id}', [DriverController::class, 'destroy']);
 
 // Produk
 Route::get('/produk', [ProdukController::class, 'index']);

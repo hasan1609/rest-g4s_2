@@ -135,14 +135,10 @@ class RestoController extends Controller
     // update by id
     public function update(Request $request, $id)
     {
-        $resto = DetailResto::findOrFail($id);
+        $user = User::findOrFail($id);
         $validator = Validator::make($request->all(), [
-            'nama_resto' => 'required',
+            'nama' => 'required',
             'tlp' => 'required|numeric|digits_between:10,13',
-            'alamat' => 'required',
-            "jam_buka" => 'date_format:H:i',
-            "jam_tutup" => 'date_format:H:i',
-            'foto' => 'image|mimes:jpeg,png,jpg|max:5048',
         ]);
 
         if ($validator->fails()) {
@@ -150,27 +146,46 @@ class RestoController extends Controller
         }
         DB::beginTransaction();
         try {
-            $input = $request->all();
-            $old_file = str_replace('/public/', '', $resto->foto);
-            $image = $request->file('foto');
-            if ($image != null) {
-                $filename = date('YmdHis') . "." . $request->foto->getClientOriginalExtension();
-                $input['foto'] = '/public/images/resto/'.$filename;
+            // UPLOAD IMAGE
+            if ($image = $request->file('foto')) {
+                $filename = date('YmdHis') . "." . $image->getClientOriginalExtension();
+                $request->foto = '/public/images/resto/' . $filename;
                 $resize = Image::make($image)->resize(300, null, function ($constraint) {
                     $constraint->aspectRatio();
                 });
-                if (File::exists($old_file)) {
-                    File::delete($old_file);
-                    $resize->save(public_path('images/resto/' . $filename));
+                $resize->save(public_path('images/resto/' . $filename));
+    
+                // Hapus foto lama jika ada
+                $old_file = str_replace('/public/', '', $user->detailResto->foto);
+                if (File::exists(public_path($old_file))) {
+                    File::delete(public_path($old_file));
                 }
+            } else {
+                // Jika tidak ada foto baru yang diunggah, gunakan foto lama
+                $request->foto = $user->detailResto->foto;
             }
-            $resto->update($input);
+
+            // Update data pada model User
+            $user->update([
+                'nama' => $request->nama,
+                'tlp' => $request->tlp,
+                // Tambahkan data lain yang ingin diupdate pada model User
+            ]);
+
+            // Update data pada model DetailUser
+            $user->detailResto->update([
+                'foto' => $request->foto,
+                'alamat' => $request->alamat,
+                "jam_buka" => $request->jam_buka,
+                "jam_tutup" => $request->jam_tutup,
+            ]);
+
             DB::commit();
             $response = [
                 'status' => true,
                 'message' => 'Data Berhasi Diubah',
             ];
-            return response()->json(["data" => $resto], Response::HTTP_OK);
+            return response()->json($response, Response::HTTP_OK);
         } catch (QueryException $e) {
             DB::rollback();
             if (isset($filename) && file_exists(public_path('images/resto/' . $filename))) {
@@ -183,12 +198,6 @@ class RestoController extends Controller
     // get resto terdekat
     public function restoTerdekat($lat, $long)
     {
-        // $resto = DB::table('detail_restos')
-        //     ->select("detail_restos.*", DB::raw("(((acos(sin((" . $lat . "*pi()/180)) * sin((`latitude`*pi()/180)) + cos((" . $lat . "*pi()/180)) * cos((`latitude`*pi()/180)) * cos(((" . $long . "- `longitude`) * pi()/180)))) * 180/pi()) * 60 * 1.1515 * 1.609344) as distance
-        // "))
-        //     ->having('distance', '<', 5)
-        //     ->get();
-
         $resto = DetailResto::select('*', DB::raw('ROUND((6371 * acos(cos(radians(' . $lat . ')) * cos(radians(latitude)) * cos(radians(longitude) - radians(' . $long . ')) + sin(radians(' . $lat . ')) * sin(radians(latitude)))), 2) AS distance'))
             ->having('distance', '<', 5)
             ->with('user')

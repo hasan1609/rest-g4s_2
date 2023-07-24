@@ -103,8 +103,7 @@ class DriverController extends Controller
         $user = User::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
-            'nik' => 'numeric|digits_between:15,16',
-            'nama_driver' => 'sometimes',
+            'nama' => 'sometimes',
             'tempat_lahir' => 'sometimes',
             'ttl' => 'date|date_format:Y-m-d',
             'jk' => 'sometimes',
@@ -115,7 +114,6 @@ class DriverController extends Controller
             'plat_no' => 'sometimes',
             'thn_kendaraan' => 'digits:4',
             'tlp' => 'numeric|digits_between:10,13',
-            'email' => 'email',
         ]);
 
         if ($validator->fails()) {
@@ -127,31 +125,31 @@ class DriverController extends Controller
             // UPLOAD IMAGE
             if ($image = $request->file('foto')) {
                 $filename = date('YmdHis') . "." . $image->getClientOriginalExtension();
-                $request->foto = '/public/images/driver/'.$filename;
+                $request->foto = '/public/images/driver/' . $filename;
                 $resize = Image::make($image)->resize(300, null, function ($constraint) {
                     $constraint->aspectRatio();
                 });
                 $resize->save(public_path('images/driver/' . $filename));
-
+    
                 // Hapus foto lama jika ada
-                $old_file = 'images/driver/' . $user->detailDriver->foto;
+                $old_file = str_replace('/public/', '', $user->detailDriver->foto);
                 if (File::exists(public_path($old_file))) {
                     File::delete(public_path($old_file));
                 }
+            } else {
+                // Jika tidak ada foto baru yang diunggah, gunakan foto lama
+                $request->foto = $user->detailDriver->foto;
             }
 
             // Update data pada model User
             $user->update([
                 'nama' => $request->nama,
-                'email' => $request->email,
                 'tlp' => $request->tlp,
-                'password' => password_hash($request->password, PASSWORD_DEFAULT),
                 // Tambahkan data lain yang ingin diupdate pada model User
             ]);
 
             // Update data pada model DetailUser
             $user->detailDriver->update([
-                'nik' => $request->nik,
                 'tempat_lahir' => $request->tempat_lahir,
                 'ttl' => $request->ttl,
                 'jk' => $request->jk,
@@ -171,6 +169,38 @@ class DriverController extends Controller
             if (isset($filename) && file_exists(public_path('images/driver/' . $filename))) {
                 unlink(public_path('images/driver/' . $filename));
             }
+            return $this->handleError($e->errorInfo);
+        }
+    }
+
+    public function destroy($id)
+    {
+        // Temukan user berdasarkan ID
+        $user = User::findOrFail($id);
+
+        // Mulai transaksi database
+        DB::beginTransaction();
+        try {
+            // Hapus foto driver jika ada
+            $old_file = str_replace('/public/', '', $user->detailDriver->foto);
+            if (File::exists(public_path($old_file))) {
+                File::delete(public_path($old_file));
+            }
+
+            // Hapus detail driver dari user
+            $user->detailDriver()->delete();
+
+            // Hapus user (driver) dari database
+            $user->delete();
+
+            // Commit transaksi database
+            DB::commit();
+
+            return $this->handleResponse('Data Berhasil Dihapus', null, Response::HTTP_OK);
+        } catch (QueryException $e) {
+            // Jika terjadi kesalahan, rollback transaksi database
+            DB::rollback();
+
             return $this->handleError($e->errorInfo);
         }
     }

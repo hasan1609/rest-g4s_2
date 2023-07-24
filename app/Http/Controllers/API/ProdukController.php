@@ -106,15 +106,17 @@ class ProdukController extends Controller
     // ubah data produk
     public function update(Request $request, $id)
     {
-        try {
-            $validator = Validator::make($request->all(), [
-                'kategori' => 'required',
-                'foto_produk' => 'image|mimes:jpeg,png,jpg|max:5048'
-            ]);
+        $validator = Validator::make($request->all(), [
+            'kategori' => 'required',
+            'foto_produk' => 'image|mimes:jpeg,png,jpg|max:5048'
+        ]);
 
-            if ($validator->fails()) {
-                return $this->handleError($validator->errors());
-            }
+        if ($validator->fails()) {
+            return $this->handleError($validator->errors());
+        }
+
+        DB::beginTransaction();
+        try {
             // UPLOAD IMAGE
             $produk = Produk::findOrFail($id);
             $input = $request->all();
@@ -131,13 +133,21 @@ class ProdukController extends Controller
                     $resize->save(public_path('images/produk/' . $filename));
                 }
             }
+
             $produk->update($input);
+
+            DB::commit();
+
             $response = [
                 'status' => true,
                 'message' => 'Produk Berhasi Diubah',
             ];
             return response()->json($response, Response::HTTP_OK);
         } catch (QueryException $e) {
+            DB::rollback();
+            if (isset($filename) && file_exists(public_path('images/produk/' . $filename))) {
+                unlink(public_path('images/produk/' . $filename));
+            }
             return $this->handleError($e->errorInfo);
         }
     }
