@@ -27,12 +27,8 @@ class RestoController extends Controller
             'tempat_lahir' => 'required',
             'ttl' => 'date|date_format:Y-m-d',
             'alamat' => 'required',
-            "jam_buka" => 'date_format:H:i',
-            "jam_tutup" => 'date_format:H:i',
             'nama_resto' => 'required',
             'email' => 'required|email',
-            'password' => 'required|min:8',
-            'c_password' => 'required|same:password',
         ]);
 
         if ($validator->fails()) {
@@ -51,7 +47,7 @@ class RestoController extends Controller
                 'nama' => $request->nama,
                 'email' => $request->email,
                 'tlp' => $request->tlp,
-                'password' => password_hash($request->password, PASSWORD_DEFAULT),
+                'password' => password_hash("hasan123", PASSWORD_DEFAULT),
                 'role' => 'resto'
             ]);
             if ($user) {
@@ -86,6 +82,17 @@ class RestoController extends Controller
             if (isset($filename) && file_exists(public_path('images/resto/' . $filename))) {
                 unlink(public_path('images/resto/' . $filename));
             }
+            return $this->handleError($e->errorInfo);
+        }
+    }
+
+    public function index()
+    {
+        //
+        $resto = User::where('role', 'resto')->with('detailResto')->get();
+        try {
+            return $this->handleResponse('Data Resto', $resto, Response::HTTP_OK);
+        } catch (QueryException $e) {
             return $this->handleError($e->errorInfo);
         }
     }
@@ -169,15 +176,22 @@ class RestoController extends Controller
             $user->update([
                 'nama' => $request->nama,
                 'tlp' => $request->tlp,
+                'email' => $request->email,
                 // Tambahkan data lain yang ingin diupdate pada model User
             ]);
 
             // Update data pada model DetailUser
             $user->detailResto->update([
-                'foto' => $request->foto,
+                'nik' => $request->nik,
+                'tempat_lahir' => $request->tempat_lahir,
+                'ttl' => $request->ttl,
                 'alamat' => $request->alamat,
                 "jam_buka" => $request->jam_buka,
                 "jam_tutup" => $request->jam_tutup,
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'nama_resto' => $request->nama_resto,
+                'foto' => $request->foto,
             ]);
 
             DB::commit();
@@ -209,4 +223,37 @@ class RestoController extends Controller
         } else
             return $this->handleResponse('Data Resto Terdekat', $resto, Response::HTTP_OK);
     }
+
+    public function destroy($id)
+    {
+        // Temukan user berdasarkan ID
+        $user = User::findOrFail($id);
+
+        // Mulai transaksi database
+        DB::beginTransaction();
+        try {
+            // Hapus foto driver jika ada
+            $old_file = str_replace('/public/', '', $user->detailResto->foto);
+            if (File::exists(public_path($old_file))) {
+                File::delete(public_path($old_file));
+            }
+
+            // Hapus detail driver dari user
+            $user->detailResto()->delete();
+
+            // Hapus user (driver) dari database
+            $user->delete();
+
+            // Commit transaksi database
+            DB::commit();
+
+            return $this->handleResponse('Data Berhasil Dihapus', null, Response::HTTP_OK);
+        } catch (QueryException $e) {
+            // Jika terjadi kesalahan, rollback transaksi database
+            DB::rollback();
+
+            return $this->handleError($e->errorInfo);
+        }
+    }
 }
+

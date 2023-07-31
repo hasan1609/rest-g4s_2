@@ -30,6 +30,8 @@ Route::post('/customer', [CustomerController::class, 'register']);
 
 
 // RESTO 
+// GET ALL RESTO
+Route::get('/resto', [RestoController::class, 'index']);
 // REGISTER
 Route::post('/resto', [RestoController::class, 'register']);
 // LOGIN
@@ -44,11 +46,14 @@ Route::post('/resto/{id}', [RestoController::class, 'update']);
 Route::get('/resto/{id}', [RestoController::class, 'show']);
 // GET RESTO TERDEKAT
 Route::get('/nearby/resto/{latitude}&{longitude}', [RestoController::class, 'restoTerdekat']);
-
+// DELETE RESTO
+Route::post('/resto/delete/{id}', [RestoController::class, 'destroy']);
 
 // DRIVER
 // ADD DRIVER
 Route::post('/driver', [DriverController::class, 'register']);
+// LOGIN
+Route::post('/login/driver', [AuthController::class, 'driverLogin']);
 // GET ALL DRIVER
 Route::get('/driver/motor', [DriverController::class, 'getMotor']);
 Route::get('/driver/mobil', [DriverController::class, 'getMobil']);
