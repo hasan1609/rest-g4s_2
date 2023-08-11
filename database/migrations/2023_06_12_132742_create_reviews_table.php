@@ -14,7 +14,7 @@ class CreateReviewsTable extends Migration
     public function up()
     {
         Schema::create('reviews', function (Blueprint $table) {
-            $table->uuid('id_review')->primary();
+            
             $table->uuid('customer_id');
             $table->uuid('resto_id')->nullable();
             $table->uuid('driver_id')->nullable();

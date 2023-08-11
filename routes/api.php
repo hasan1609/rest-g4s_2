@@ -7,6 +7,7 @@ use App\Http\Controllers\API\DriverController;
 use App\Http\Controllers\API\CustomerController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\ProdukController;
+use App\Http\Controllers\API\CartController;
 use App\Http\Controllers\API\ReviewController;
 
 /*
@@ -54,6 +55,7 @@ Route::post('/resto/delete/{id}', [RestoController::class, 'destroy']);
 Route::post('/driver', [DriverController::class, 'register']);
 // LOGIN
 Route::post('/login/driver', [AuthController::class, 'driverLogin']);
+Route::post('/login/driver', [AuthController::class, 'driverLogin']);
 // GET ALL DRIVER
 Route::get('/driver/motor', [DriverController::class, 'getMotor']);
 Route::get('/driver/mobil', [DriverController::class, 'getMobil']);
@@ -86,3 +88,17 @@ Route::get('count/kategori/{id}', [ProdukController::class, 'getCount']);
 
 // GET REVIEW BY ID RESTO
 Route::get('review/resto/{id}', [ReviewController::class, 'getReviewByIdResto']);
+
+// CART
+// GET COUNT CART
+Route::get('cart/count/{id}', [CartController::class, 'getCount']);
+// ADD TO CART
+Route::post('cart', [CartController::class, 'store']);
+// get count cart with resto
+Route::get('cart/{id}/{lat}&{long}', [CartController::class, 'index']);
+// hapus cart by id toko
+Route::post('cart/{id}/{user}', [CartController::class, 'destroy']);
+// hapus cart by id cart
+Route::post('item/cart/{id}', [CartController::class, 'destroyItem']);
+// get count cart with resto
+Route::get('cart/item/{id}/{user}', [CartController::class, 'show']);
