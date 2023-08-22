@@ -6,10 +6,11 @@
     "license": "MIT",
     "require": {
         "php": "^7.3|^8.0",
-        "firebase/php-jwt": "^6.8",
         "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^7.0.1",
         "intervention/image": "^2.7",
+        "kreait/laravel-firebase": "^4.2",
+        "laravel-notification-channels/fcm": "*",
         "laravel/framework": "^8.75",
         "laravel/sanctum": "^2.11",
         "laravel/tinker": "^2.5",

@@ -9,6 +9,7 @@ use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\ProdukController;
 use App\Http\Controllers\API\CartController;
 use App\Http\Controllers\API\ReviewController;
+use App\Http\Controllers\API\BookingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -102,3 +103,7 @@ Route::post('cart/{id}/{user}', [CartController::class, 'destroy']);
 Route::post('item/cart/{id}', [CartController::class, 'destroyItem']);
 // get count cart with resto
 Route::get('cart/item/{id}/{user}', [CartController::class, 'show']);
+
+// BOOKING
+Route::post('booking', [BookingController::class, 'store']);
+Route::get('booking/near/{latitude}&{longitude}', [BookingController::class, 'findNearestDriver']);

@@ -183,7 +183,6 @@ class DriverController extends Controller
     {
         // Temukan user berdasarkan ID
         $user = User::findOrFail($id);
-
         // Mulai transaksi database
         DB::beginTransaction();
         try {

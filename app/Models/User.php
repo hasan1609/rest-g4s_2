@@ -70,4 +70,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Produk::class, 'user_id');
     }
+
+    public function routeNotificationForFcm()
+    {
+        return $this->fcm;
+    }
 }
