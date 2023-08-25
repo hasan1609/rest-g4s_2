@@ -14,19 +14,19 @@ use NotificationChannels\Fcm\Resources\AndroidNotification;
 use NotificationChannels\Fcm\Resources\WebpushConfig;
 use NotificationChannels\Fcm\Resources\WebpushFcmOptions;
 
-class DriverNotification extends Notification
+class OrderNotification extends Notification
 {
     use Queueable;
 
-    protected $driverData;
-    protected $distance;
-    protected $idBooking;
+    protected $title;
+    protected $body;
+    protected $bookingId;
 
-    public function __construct($driverData, $distance, $idBooking)
+    public function __construct($title, $body, $bookingId)
     {
-        $this->driverData = $driverData;
-        $this->distance = $distance;
-        $this->idBooking = $idBooking;
+        $this->title = $title;
+        $this->body = $body;
+        $this->bookingId = $bookingId;
     }
 
     /**
@@ -44,14 +44,13 @@ class DriverNotification extends Notification
     {
         return FcmMessage::create()
         ->setData([
-            'title' => 'New Booking Request',
-            'body' => 'You have a new booking request. ID: ' . $this->idBooking,
-            'booking_id' => $this->idBooking, // Menyimpan ID booking dalam data notifikasi
-            'action' => 'accept_reject', // Menyimpan tipe tindakan
+            'title' => $this->title,
+            'body' => $this->body,
+            'booking_id' => $this->bookingId, // Menyimpan ID booking dalam data notifikasi
         ])
         ->setNotification(FcmNotification::create()
-            ->setTitle('New Booking Request')
-            ->setBody('You have a new booking request. ID: ' . $this->idBooking))
+            ->setTitle($this->title)
+            ->setBody($this->body))
         ->setAndroid(AndroidConfig::create()
             ->setNotification(AndroidNotification::create()
                 ->setClickAction('FLUTTER_NOTIFICATION_CLICK')
@@ -59,12 +58,12 @@ class DriverNotification extends Notification
                 ->setIcon('ic_launcher')
                 ->setTag('booking-request')
                 ->setChannelId('booking-channel')
-                ->setBodyLocArgs([$this->idBooking])
+                ->setBodyLocArgs([$this->bookingId])
             )
         )
         ->setWebpush(WebpushConfig::create()
             ->setFcmOptions(WebpushFcmOptions::create()
-                ->setLink('/booking/' . $this->idBooking)
+                ->setLink('/booking/' . $this->bookingId)
             )
         );
     }

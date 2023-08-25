@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateBookingsTable extends Migration
+class CreateOrdersTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,14 +13,15 @@ class CreateBookingsTable extends Migration
      */
     public function up()
     {
-        Schema::create('bookings', function (Blueprint $table) {
-            $table->string('id_booking')->unique()->primary();
+        Schema::create('orders', function (Blueprint $table) {
+            $table->string('id_order')->unique()->primary();
             $table->uuid('customer_id');
             $table->uuid('driver_id')->nullable();
             $table->uuid('resto_id')->nullable();
             $table->text('produk_order');
             $table->text('ongkos_kirim');
             $table->text('biaya_pesanan')->nullable();
+            $table->enum('status', ['0','1','2','3','4','5'])->default('0');
             $table->string('total');
             $table->text('alamat_tujuan');
             $table->string('latitude_tujuan');
@@ -48,6 +49,6 @@ class CreateBookingsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('bookings');
+        Schema::dropIfExists('orders');
     }
 }

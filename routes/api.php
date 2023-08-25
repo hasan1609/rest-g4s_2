@@ -10,6 +10,8 @@ use App\Http\Controllers\API\ProdukController;
 use App\Http\Controllers\API\CartController;
 use App\Http\Controllers\API\ReviewController;
 use App\Http\Controllers\API\BookingController;
+use App\Http\Controllers\API\NotifikasiController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -106,4 +108,12 @@ Route::get('cart/item/{id}/{user}', [CartController::class, 'show']);
 
 // BOOKING
 Route::post('booking', [BookingController::class, 'store']);
-Route::get('booking/near/{latitude}&{longitude}', [BookingController::class, 'findNearestDriver']);
+//  getby id
+Route::get('booking/{id}', [BookingController::class, 'getById']);
+// update status terima order toko
+Route::post('booking/resto/terima/{id}', [BookingController::class, 'terimaBooking']);
+
+
+// NOTIFIKASi
+//  getby id
+Route::get('notifikasi/{id}', [NotifikasiController::class, 'getById']);
