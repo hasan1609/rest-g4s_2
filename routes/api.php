@@ -10,7 +10,8 @@ use App\Http\Controllers\API\ProdukController;
 use App\Http\Controllers\API\CartController;
 use App\Http\Controllers\API\ReviewController;
 use App\Http\Controllers\API\BookingController;
-use App\Http\Controllers\API\NotifikasiController;
+use App\Http\Controllers\API\NotificationController;
+use App\Http\Controllers\API\OrderController;
 
 
 /*
@@ -113,7 +114,12 @@ Route::get('booking/{id}', [BookingController::class, 'getById']);
 // update status terima order toko
 Route::post('booking/resto/terima/{id}', [BookingController::class, 'terimaBooking']);
 
+// ORDER
+// get by id Resto
+Route::get('order/resto/{id}', [OrderController::class, 'getByIdResto']);
+// get produk id produk
+Route::get('order/resto/produk/{id}', [OrderController::class, 'getProdukOrder']);
 
 // NOTIFIKASi
 //  getby id
-Route::get('notifikasi/{id}', [NotifikasiController::class, 'getById']);
+Route::get('notifikasi/{id}', [NotificationController::class, 'getById']);

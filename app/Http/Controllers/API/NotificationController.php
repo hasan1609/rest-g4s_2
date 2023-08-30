@@ -29,6 +29,6 @@ class NotificationController extends Controller
     public function getById($id)
     {
         $notif = NotificationLog::where('recive_id', $id)->get();
-        return $this->handleResponse('Berhasil', ['data' => $notif], Response::HTTP_OK);
+        return $this->handleResponse('Berhasil',$notif, Response::HTTP_OK);
     }
 }

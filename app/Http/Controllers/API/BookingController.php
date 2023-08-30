@@ -229,6 +229,8 @@ class BookingController extends Controller
                 $restoTitle = 'Pesanan Baru';
                 $restoBody = 'Kamu mempunyai pesanan produk baru ' . $booking->id_booking;
                 $resto->notify(new OrderNotification($restoTitle, $restoBody, $booking->id_booking));
+                // simpan notif log
+                app(NotificationController::class)->store($restoTitle, $restoBody, $booking->id_booking, $request->driver_id, $booking->resto_id);
             }
             
             $customer = User::findOrFail($booking->customer_id);
@@ -236,8 +238,10 @@ class BookingController extends Controller
                 $customerTitle = 'Pesanan Diterima';
                 $customerBody = 'Pesanan (' . $booking->id_booking . ') kamu diterima. Driver sedang menuju ke Toko.';
                 $customer->notify(new OrderNotification($customerTitle, $customerBody, $booking->id_booking));
+                // simpan notif log
+                app(NotificationController::class)->store($customerTitle, $customerBody, $booking->id_booking, $request->driver_id, $booking->customer_id);
                 // hapus ppada booking
-                $booking->delete();
+                // $booking->delete();
             }
 
             $response = [
