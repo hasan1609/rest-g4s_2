@@ -23,6 +23,10 @@ class CreateOrdersTable extends Migration
             $table->text('biaya_pesanan')->nullable();
             $table->enum('status', ['0','1','2','3','4','5'])->default('0');
             $table->string('total');
+            $table->enum('kategori', ['motor', 'mobil', 'resto']);
+            $table->text('alamat_dari');
+            $table->string('latitude_dari');
+            $table->string('longitude_dari');
             $table->text('alamat_tujuan');
             $table->string('latitude_tujuan');
             $table->string('longitude_tujuan');

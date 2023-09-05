@@ -51,7 +51,7 @@ class BookingController extends Controller
             $nearestDriver = $this->findNearestDriver($request->latitude, $request->longitude, $booking->id_booking, $item);
     
             
-            // $this->deleteCartItems($item);
+            $this->deleteCartItems($item);
     
             DB::commit();
     
@@ -211,6 +211,7 @@ class BookingController extends Controller
     
         if ($booking) {
             $order = Order::create([
+                'id_order' => $booking->id_booking,
                 'customer_id' => $booking->customer_id,
                 'resto_id' => $booking->resto_id,
                 'driver_id' => $request->driver_id,

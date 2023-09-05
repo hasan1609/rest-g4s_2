@@ -53,18 +53,51 @@ class OrderController extends Controller
         return response()->json($response, Response::HTTP_OK);
 
     }
+    
+    public function getByIdUser($id)
+    {
+        $orders = Order::where('resto_id',$id)
+            ->with('driver')->with('detailDriver')
+            ->with('resto')->with('detailResto')
+            ->get();
+            
+        $idCountsPerOrder = [];
+
+        foreach ($orders as $order) {
+            $idCountsPerOrder[] = [
+                'order' => $order,
+                'count' => $order->countIds(),
+            ];
+        }
+        $response = [
+            'status' => true,
+            'message' => 'Berhasil',
+            'data' => $idCountsPerOrder
+        ];
+
+        return response()->json($response, Response::HTTP_OK);
+
+    }
 
     public function getProdukOrder($id)
     {
-        $idProduk = explode(',', $id);
+        $order = Order::where('id_order', $id)
+            ->with('driver')->with('detailDriver')
+            ->with('customer')->with('detailCustomer')
+            ->first();
+        $idProduk = explode(',', $order->produk_order);
         $produk = OrderResto::whereIn('id_order_resto', $idProduk)->with('produk')->get();
+        $totalJumlah = $produk->sum('total');
 
         $response = [
             'status' => true,
             'message' => 'Berhasil',
-            'data' => $produk
+            'order' => $order,
+            'produk' => $produk,
+            'totalJumlah' => $totalJumlah
         ];
 
         return response()->json($response, Response::HTTP_OK);
     }
 }
+

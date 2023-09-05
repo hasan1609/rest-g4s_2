@@ -123,3 +123,5 @@ Route::get('order/resto/produk/{id}', [OrderController::class, 'getProdukOrder']
 // NOTIFIKASi
 //  getby id
 Route::get('notifikasi/{id}', [NotificationController::class, 'getById']);
+//  update status
+Route::post('notifikasi/{id}', [NotificationController::class, 'updateStatus']);

@@ -31,4 +31,17 @@ class NotificationController extends Controller
         $notif = NotificationLog::where('recive_id', $id)->get();
         return $this->handleResponse('Berhasil',$notif, Response::HTTP_OK);
     }
+
+    public function updateStatus($id)
+    {
+        $notif = NotificationLog::findOrFail($id);
+        $input['status'] = "1";
+        $notif->update($input);
+
+        $response = [
+            'status' => true,
+            'message' => 'Berhasil',
+        ];
+        return response()->json($response, Response::HTTP_OK);
+    }
 }
