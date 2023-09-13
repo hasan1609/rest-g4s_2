@@ -54,9 +54,9 @@ class OrderController extends Controller
 
     }
     
-    public function getByIdUser($id)
+    public function getByIdCustomer($id)
     {
-        $orders = Order::where('resto_id',$id)
+        $orders = Order::where('customer_id',$id)
             ->with('driver')->with('detailDriver')
             ->with('resto')->with('detailResto')
             ->get();

@@ -26,6 +26,10 @@ class Booking extends Model
         'ongkos_kirim',
         'biaya_pesanan',
         'total',
+        'kategori',
+        'alamat_dari',
+        'longitude_dari',
+        'latitude_dari',
         'alamat_tujuan',
         'longitude_tujuan',
         'latitude_tujuan'

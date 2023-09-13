@@ -46,7 +46,7 @@ class BookingController extends Controller
             $totalJumlah = $item->sum('total');
             $orderItems = $this->saveOrderItems($item);
             // // Membuat booking sebelum memanggil findNearestDriver
-            $booking = $this->createBooking($item, $inputIds, $totalJumlah, $request->alamat_tujuan, $request->latitude_tujuan, $request->longitude_tujuan);
+            $booking = $this->createBooking($item, $inputIds, $totalJumlah, $request->alamat_dari, $request->latitude_dari, $request->longitude_dari, $request->alamat_tujuan, $request->latitude_tujuan, $request->longitude_tujuan);
             // cari driver
             $nearestDriver = $this->findNearestDriver($request->latitude, $request->longitude, $booking->id_booking, $item);
     
@@ -70,7 +70,7 @@ class BookingController extends Controller
         }
     }
     
-    public function createBooking($items, $inputIds, $totalJumlah, $alamatTujuan, $latTujuan, $longTujuan)
+    public function createBooking($items, $inputIds, $totalJumlah, $alamatDari, $latDari, $longDari,$alamatTujuan, $latTujuan, $longTujuan)
     {
         $firstItem = $items->first();
         $key = $this->generateKeyFromDatetime();
@@ -83,6 +83,10 @@ class BookingController extends Controller
             'ongkos_kirim' => '3000',
             'biaya_pesanan' => '3000',
             'total' => $subtotal,
+            'kategori' => 'resto',
+            'alamat_dari'=> $alamatDari,
+            'longitude_dari'=> $longDari,
+            'latitude_dari' => $latDari,
             'alamat_tujuan'=> $alamatTujuan,
             'longitude_tujuan'=> $longTujuan,
             'latitude_tujuan' => $latTujuan
@@ -220,6 +224,10 @@ class BookingController extends Controller
                 'ongkos_kirim' => $booking->ongkos_kirim,
                 'biaya_pesanan' => $booking->biaya_pesanan,
                 'total' => $booking->total,
+                'kategori' => $booking->kategori,
+                'alamat_dari'=> $booking->alamat_dari,
+                'longitude_dari'=> $booking->longitude_dari,
+                'latitude_dari' => $booking->latitude_dari,
                 'alamat_tujuan'=> $booking->alamat_tujuan,
                 'longitude_tujuan'=> $booking->longitude_tujuan,
                 'latitude_tujuan' => $booking->latitude_tujuan
@@ -242,7 +250,7 @@ class BookingController extends Controller
                 // simpan notif log
                 app(NotificationController::class)->store($customerTitle, $customerBody, $booking->id_booking, $request->driver_id, $booking->customer_id);
                 // hapus ppada booking
-                // $booking->delete();
+                $booking->delete();
             }
 
             $response = [

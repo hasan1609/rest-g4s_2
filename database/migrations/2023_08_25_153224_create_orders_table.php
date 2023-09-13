@@ -18,7 +18,7 @@ class CreateOrdersTable extends Migration
             $table->uuid('customer_id');
             $table->uuid('driver_id')->nullable();
             $table->uuid('resto_id')->nullable();
-            $table->text('produk_order');
+            $table->text('produk_order')->nullable();
             $table->text('ongkos_kirim');
             $table->text('biaya_pesanan')->nullable();
             $table->enum('status', ['0','1','2','3','4','5'])->default('0');
