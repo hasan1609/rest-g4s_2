@@ -120,7 +120,7 @@ Route::get('order/resto/{id}', [OrderController::class, 'getByIdResto']);
 // get by id Resto
 Route::get('order/customer/{id}', [OrderController::class, 'getByIdCustomer']);
 // get produk id produk
-Route::get('order/resto/produk/{id}', [OrderController::class, 'getProdukOrder']);
+Route::get('order/detail/{id}', [OrderController::class, 'getDetailLogOrder']);
 
 // NOTIFIKASi
 //  getby id

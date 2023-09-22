@@ -20,8 +20,10 @@ class Review extends Model
         'customer_id',
         'driver_id',
         'resto_id',
-        'rating',
-        'ulasan'
+        'rating_driver',
+        'rating_resto',
+        'ulasan_driver',
+        'ulasan_resto'
     ];
 
     public function userCust()

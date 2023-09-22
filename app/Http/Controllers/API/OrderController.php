@@ -59,6 +59,8 @@ class OrderController extends Controller
         $orders = Order::where('customer_id',$id)
             ->with('driver')->with('detailDriver')
             ->with('resto')->with('detailResto')
+            ->with('customer')->with('detailCustomer')
+            ->with('review')
             ->get();
             
         $idCountsPerOrder = [];
@@ -79,25 +81,64 @@ class OrderController extends Controller
 
     }
 
-    public function getProdukOrder($id)
+    public function getByIdDriver($id)
+    {
+        $orders = Order::where('driver_id',$id)
+            ->with('customer')->with('detailCustomer')
+            ->with('resto')->with('detailResto')
+            ->with('review')
+            ->get();
+            
+        $idCountsPerOrder = [];
+
+        foreach ($orders as $order) {
+            $idCountsPerOrder[] = [
+                'order' => $order,
+                'count' => $order->countIds(),
+            ];
+        }
+        $response = [
+            'status' => true,
+            'message' => 'Berhasil',
+            'data' => $idCountsPerOrder
+        ];
+
+        return response()->json($response, Response::HTTP_OK);
+
+    }
+
+    public function getDetailLogOrder($id)
     {
         $order = Order::where('id_order', $id)
             ->with('driver')->with('detailDriver')
             ->with('customer')->with('detailCustomer')
+            ->with('resto')->with('detailResto')
+            ->with('review')
             ->first();
-        $idProduk = explode(',', $order->produk_order);
-        $produk = OrderResto::whereIn('id_order_resto', $idProduk)->with('produk')->get();
-        $totalJumlah = $produk->sum('total');
+        $totalJumlah = $order->total + $order->biaya_pesanan + $order->ongkos_kirim;
 
-        $response = [
-            'status' => true,
-            'message' => 'Berhasil',
-            'order' => $order,
-            'produk' => $produk,
-            'totalJumlah' => $totalJumlah
-        ];
+        if($order->produk_order != null){
+            $idProduk = explode(',', $order->produk_order);
+            $produk = OrderResto::whereIn('id_order_resto', $idProduk)->with('produk')->get();
+            $response = [
+                'status' => true,
+                'message' => 'Berhasil',
+                'order' => $order,
+                'produk' => $produk,
+                'totalJumlah' => $totalJumlah
+            ];
+            return response()->json($response, Response::HTTP_OK);
+        }else{
+            $response = [
+                'status' => true,
+                'message' => 'Berhasil',
+                'order' => $order,
+                'produk' => null,
+                'totalJumlah' => $totalJumlah
+            ];
+            return response()->json($response, Response::HTTP_OK);
+        }
 
-        return response()->json($response, Response::HTTP_OK);
     }
 }
 

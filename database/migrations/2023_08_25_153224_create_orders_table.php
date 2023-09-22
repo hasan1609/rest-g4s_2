@@ -30,6 +30,7 @@ class CreateOrdersTable extends Migration
             $table->text('alamat_tujuan');
             $table->string('latitude_tujuan');
             $table->string('longitude_tujuan');
+            $table->uuid('review_id')->nullable();
             $table->timestamps();
             $table->foreign('customer_id')
                 ->references('id_user')
@@ -42,6 +43,10 @@ class CreateOrdersTable extends Migration
             $table->foreign('resto_id')
                 ->references('id_user')
                 ->on('users')
+                ->onDelete('cascade');
+            $table->foreign('review_id')
+                ->references('id_review')
+                ->on('reviews')
                 ->onDelete('cascade');
         });
     }

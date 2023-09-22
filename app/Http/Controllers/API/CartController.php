@@ -49,11 +49,6 @@ class CartController extends Controller
     }
     
 
-    public function create()
-    {
-        //
-    }
-
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -125,16 +120,6 @@ class CartController extends Controller
     }
 
 
-    public function edit($id)
-    {
-        //
-    }
-
-
-    public function update(Request $request, $id)
-    {
-        //
-    }
 
     // hapus cart by id toko
     public function destroy($id, $user)

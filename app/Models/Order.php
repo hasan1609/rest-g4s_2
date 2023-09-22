@@ -36,7 +36,8 @@ class Order extends Model
         'latitude_dari',
         'alamat_tujuan',
         'longitude_tujuan',
-        'latitude_tujuan'
+        'latitude_tujuan',
+        'review_id'
     ];
 
     public function customer()
@@ -74,6 +75,11 @@ class Order extends Model
         $idCounts = count($idsArray);
 
         return $idCounts;
+    }
+
+    public function review()
+    {
+        return $this->belongsTo(Review::class, 'review_id', 'id_review');
     }
 
     

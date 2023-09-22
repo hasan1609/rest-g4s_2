@@ -18,8 +18,10 @@ class CreateReviewsTable extends Migration
             $table->uuid('customer_id');
             $table->uuid('resto_id')->nullable();
             $table->uuid('driver_id')->nullable();
-            $table->double('rating', 2, 1);
-            $table->string('ulasan')->nullable();
+            $table->double('rating_driver', 2, 1)->nullable();
+            $table->double('rating_resto', 2, 1)->nullable();
+            $table->text('ulasan_driver')->nullable();
+            $table->text('ulasan_resto')->nullable();
             $table->timestamps();
 
             $table->foreign('resto_id')
