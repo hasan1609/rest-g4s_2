@@ -30,4 +30,15 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // 'firebase' => [
+    //     "apiKey"=> "AIzaSyBwNV9Lso2Z0Wm6zg_H1VnYCNtZNsXvkng",
+    //     "authDomain"=> "go4sumbergedang-78702.firebaseapp.com",
+    //     "databaseURL"=> "https://go4sumbergedang-78702-default-rtdb.firebaseio.com",
+    //     "projectId"=> "go4sumbergedang-78702",
+    //     "storageBucket"=> "go4sumbergedang-78702.appspot.com",
+    //     "messagingSenderId"=> "299884546534",
+    //     "appId"=> "1:299884546534:web:166d98359e3a46c0126e27",
+    //     "measurementId"=> "G-0VNV48G110"
+    // ],
+
 ];

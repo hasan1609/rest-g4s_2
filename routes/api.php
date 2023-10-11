@@ -119,6 +119,8 @@ Route::post('booking/resto/terima/{id}', [BookingController::class, 'terimaBooki
 Route::get('order/resto/{id}', [OrderController::class, 'getByIdResto']);
 // get by id Resto
 Route::get('order/customer/{id}', [OrderController::class, 'getByIdCustomer']);
+// get by id Driver
+Route::get('order/driver/{id}', [OrderController::class, 'getByIdDriver']);
 // get produk id produk
 Route::get('order/detail/{id}', [OrderController::class, 'getDetailLogOrder']);
 

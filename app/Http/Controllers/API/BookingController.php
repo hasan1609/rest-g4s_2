@@ -27,6 +27,12 @@ use Illuminate\Http\JsonResponse;
 
 class BookingController extends Controller
 {
+    private $database;
+
+    public function __construct()
+    {
+        $this->database = \App\Services\FirebaseService::connect();
+    }
     public function generateKeyFromDatetime()
     {
         $datetime = now();
@@ -46,19 +52,28 @@ class BookingController extends Controller
             $totalJumlah = $item->sum('total');
             $orderItems = $this->saveOrderItems($item);
             // // Membuat booking sebelum memanggil findNearestDriver
-            $booking = $this->createBooking($item, $inputIds, $totalJumlah, $request->alamat_dari, $request->latitude_dari, $request->longitude_dari, $request->alamat_tujuan, $request->latitude_tujuan, $request->longitude_tujuan);
+            $booking = $this->createBooking($item, $request->kategori, $inputIds, $totalJumlah, $request->alamat_dari, $request->latitude_dari, $request->longitude_dari, $request->alamat_tujuan, $request->latitude_tujuan, $request->longitude_tujuan);
             // cari driver
-            $nearestDriver = $this->findNearestDriver($request->latitude, $request->longitude, $booking->id_booking, $item);
-    
+            $nearestDriver = $this->findNearestDriver($request->latitude_dari, $request->longitude_dari, $booking->id_booking, $item);
             
-            $this->deleteCartItems($item);
+            // $this->deleteCartItems($item);
+    
+    
+            if ($nearestDriver->original['data'] != null) {
+                $driver = User::where('id_user', $nearestDriver->original['data'] )->with('detailDriver')->get();
+                $response = [
+                    'status' => true,
+                    'data' => $driver,
+                ];
+            } else {
+                $response = [
+                    'status' => false,
+                    'data' => null,
+                ];
+            }
     
             DB::commit();
     
-            $response = [
-                'status' => true,
-                'message' => 'Order Berhasil Ditambah',
-            ];
             return response()->json($response, Response::HTTP_CREATED);
         } catch (Exception $e) {
             DB::rollback();
@@ -70,20 +85,21 @@ class BookingController extends Controller
         }
     }
     
-    public function createBooking($items, $inputIds, $totalJumlah, $alamatDari, $latDari, $longDari,$alamatTujuan, $latTujuan, $longTujuan)
+    public function createBooking($items, $kategori, $inputIds, $totalJumlah, $alamatDari, $latDari, $longDari,$alamatTujuan, $latTujuan, $longTujuan)
     {
         $firstItem = $items->first();
         $key = $this->generateKeyFromDatetime();
         $subtotal = $totalJumlah + 3000 + 30000;
-        return Booking::create([
+        return Order::create([
             'id_booking' => $key,
             'customer_id' => $firstItem->user_id,
             'resto_id' => $firstItem->toko_id,
             'produk_order' => implode(',', $inputIds),
+            'status' => "0",
             'ongkos_kirim' => '3000',
             'biaya_pesanan' => '3000',
             'total' => $subtotal,
-            'kategori' => 'resto',
+            'kategori' => $kategori,
             'alamat_dari'=> $alamatDari,
             'longitude_dari'=> $longDari,
             'latitude_dari' => $latDari,
@@ -91,11 +107,6 @@ class BookingController extends Controller
             'longitude_tujuan'=> $longTujuan,
             'latitude_tujuan' => $latTujuan
         ]);
-    }
-
-    private function updateBookingDriver($bookingId, $driverId)
-    {
-        Booking::where('id_booking', $bookingId)->update(['driver_id' => $driverId]);
     }
 
     private function saveOrderItems($items)
@@ -126,23 +137,25 @@ class BookingController extends Controller
 
     public function findNearestDriver($latitude, $longitude, $bookingId, $items)
     {
-        $database = Firebase::database();
-        $driversRef = $database->getReference('driver_active');
+        $driversRef = $this->database->getReference('driver_active');
         $driversSnapshot = $driversRef->getSnapshot();
 
         $nearestDriver = null;
         $maxDistance = 3; // Jarak maksimum dalam kilometer
         if ($driversSnapshot->exists()) {
             foreach ($driversSnapshot->getValue() as $driverId => $driverData) {
-                $distance = $this->haversineDistance($latitude,$longitude, $driverData['latitude'], $driverData['longitude']);
-
-                if ($distance <= $maxDistance) {
-                    if ($nearestDriver === null || $distance < $nearestDriver['distance']) {
-                        $nearestDriver = [
-                            'driver_id' => $driverId,
-                            'distance' => $distance,
-                            'data' => $driverData,
-                        ];
+                // Periksa status "active" driver
+                if ($driverData['status'] === 'active') {
+                    $distance = $this->haversineDistance($latitude, $longitude, $driverData['latitude'], $driverData['longitude']);
+        
+                    if ($distance <= $maxDistance) {
+                        if ($nearestDriver === null || $distance < $nearestDriver['distance']) {
+                            $nearestDriver = [
+                                'driver_id' => $driverId,
+                                'distance' => $distance,
+                                'data' => $driverData,
+                            ];
+                        }
                     }
                 }
             }
@@ -153,9 +166,9 @@ class BookingController extends Controller
                 $title = 'Pesanan Baru';
                 $body = 'Kamu Mempunyai pesanan makanan baru. Kode: ' . $bookingId;
 
-                $driver->notify(new OrderNotification($title, $body, $bookingId));
+                // $driver->notify(new OrderNotification($title, $body, $bookingId));
                 // simpan notif log
-                app(NotificationController::class)->store($title, $body, $bookingId, $firstItem->user_id, $driverData);
+                // app(NotificationController::class)->store($title, $body, $bookingId, $firstItem->user_id, $driverData);
 
                 // Update data driver_id pada tabel booking
                 // $this->updateBookingDriver($idBooking, $driver->id);
@@ -163,10 +176,10 @@ class BookingController extends Controller
                 return response()->json(['data' => $nearestDriver]);
             } else {
                 // Tidak ada driver yang ditemukan
-                return response()->json(['data' => 'No drivers available'], 404);
+                return response()->json(['data' => null], 404);
             }
         } else {
-            return response()->json(['message' => 'No active drivers found'], 404);
+            return response()->json(['data' => null], 404);
         }
     }
 
@@ -209,6 +222,10 @@ class BookingController extends Controller
         return response()->json($response, Response::HTTP_OK);
     }
 
+    private function updateBookingDriver($bookingId, $driverId)
+    {
+        Booking::where('id_booking', $bookingId)->update(['driver_id' => $driverId]);
+    }
     public function terimaBooking(Request $request, $id)
     {
         $booking = Booking::findOrFail($id);

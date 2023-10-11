@@ -91,16 +91,29 @@ class OrderController extends Controller
             
         $idCountsPerOrder = [];
 
+        $tanggalHariIni = date('Y-m-d');
+
+        // Inisialisasi total pendapatan
+        $pendapatan = 0;
+
         foreach ($orders as $order) {
             $idCountsPerOrder[] = [
                 'order' => $order,
                 'count' => $order->countIds(),
             ];
+            // Ambil tanggal pesanan dalam format Y-m-d
+            $tanggalPesanan = date('Y-m-d', strtotime($order->created_at));
+
+            // Jika tanggal pesanan sama dengan tanggal hari ini, tambahkan ongkos kirim ke total
+            if ($tanggalPesanan === $tanggalHariIni) {
+                $pendapatan += $order->ongkos_kirim;
+            }
         }
         $response = [
             'status' => true,
             'message' => 'Berhasil',
-            'data' => $idCountsPerOrder
+            'data' => $idCountsPerOrder,
+            'pendapatan' => $pendapatan
         ];
 
         return response()->json($response, Response::HTTP_OK);
