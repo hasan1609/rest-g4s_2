@@ -17,7 +17,15 @@ class ReviewController extends Controller
     public function getReviewByIdResto($id)
     {
         $review = Review::where('resto_id', $id)
-            ->with('userCust:id_user,nama', 'customer:user_id,foto')
+            ->with('userCust', 'customer')
+            ->get();
+        return $this->handleResponse('Data Review', $review, Response::HTTP_OK);
+    }
+
+    public function getReviewByIdDriver($id)
+    {
+        $review = Review::where('driver_id', $id)
+            ->with('userCust', 'customer')
             ->get();
         return $this->handleResponse('Data Review', $review, Response::HTTP_OK);
     }

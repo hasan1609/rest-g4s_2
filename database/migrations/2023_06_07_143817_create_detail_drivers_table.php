@@ -28,7 +28,7 @@ class CreateDetailDriversTable extends Migration
             $table->string('latitude')->nullable();
             $table->string('longitude')->nullable();
             $table->enum('status_akun', ['proses', 'tolak', 'aktif'])->default('proses');
-            $table->enum('status_driver', ['motor', 'mobil']);
+            $table->enum('status_driver', ['motor_manual','motor_otomatis', 'mobil']);
             $table->enum('status', ['on', 'off', 'busy'])->default('off');
             $table->timestamps();
             $table->foreign('user_id')

@@ -11,7 +11,7 @@ use Laravel\Sanctum\HasApiTokens;
 use App\Models\User;
 use App\Models\DetailResto;
 use App\Models\DetailDriver;
-use App\Models\detailCustomer;
+use App\Models\DetailCustomer;
 use App\Traits\UUID;
 
 class Order extends Model
@@ -37,6 +37,7 @@ class Order extends Model
         'alamat_tujuan',
         'longitude_tujuan',
         'latitude_tujuan',
+        'routes',
         'review_id'
     ];
 
@@ -80,6 +81,11 @@ class Order extends Model
     public function review()
     {
         return $this->belongsTo(Review::class, 'review_id', 'id_review');
+    }
+
+    public function saldoDriver()
+    {
+        return $this->belongsTo(Saldo::class, 'driver_id', 'user_id');
     }
 
     

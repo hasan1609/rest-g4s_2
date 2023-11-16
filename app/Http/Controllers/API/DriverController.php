@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\DetailDriver;
+use App\Models\Saldo;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\DB;
@@ -73,6 +74,9 @@ class DriverController extends Controller
                     $constraint->aspectRatio();
                 });
                 $resize->save(public_path('images/driver/' . $filename));
+                $user->saldo()->create([
+                    'saldo'=> "0"
+                ]);
             }
             DB::commit();
 
@@ -88,7 +92,7 @@ class DriverController extends Controller
 
     public function getMotor()
     {
-        $driver = DetailDriver::where('status_driver', 'motor')->with('user')->get();
+        $driver = DetailDriver::whereNotIn('status_driver', ['mobil', 'resto'])->with('user')->get();
         return $this->handleResponse('Data Driver', $driver, Response::HTTP_OK);
     }
 

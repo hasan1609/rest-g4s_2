@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\User;
+use App\Models\Produk;
+use App\Models\DetailResto;
+use App\Traits\UUID;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use App\Models\User;
-use App\Traits\UUID;
 
 
 class Cart extends Model
@@ -39,6 +41,6 @@ class Cart extends Model
 
     public function resto()
     {
-        return $this->belongsTo(Detailresto::class, 'toko_id', 'user_id');
+        return $this->belongsTo(DetailResto::class, 'toko_id', 'user_id');
     }
 }

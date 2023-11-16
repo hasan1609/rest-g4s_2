@@ -6,6 +6,7 @@ use App\Traits\UUID;
 use App\Models\DetailResto;
 use App\Models\DetailDriver;
 use App\Models\DetailCustomer;
+use App\Models\Saldo;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -64,6 +65,11 @@ class User extends Authenticatable
     public function detailDriver()
     {
         return $this->hasOne(DetailDriver::class, 'user_id');
+    }
+    
+    public function saldo()
+    {
+        return $this->hasOne(Saldo::class, 'user_id');
     }
 
     public function produk()

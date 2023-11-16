@@ -13,6 +13,7 @@ use NotificationChannels\Fcm\Resources\Notification as FcmNotification;
 use LaravelFCM\Facades\FCM;
 use Illuminate\Support\Str;
 use App\Models\User;
+use App\Models\DetailDriver;
 use App\Models\OrderResto;
 use App\Models\Cart;
 use App\Models\Booking;
@@ -23,7 +24,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Http\JsonResponse;
-
+use GuzzleHttp\Client;
 
 class BookingController extends Controller
 {
@@ -44,28 +45,79 @@ class BookingController extends Controller
 
     public function store(Request $request)
     {
+        DB::beginTransaction();
         try {
-            DB::beginTransaction();
-
-            $inputIds = explode(',', $request->id);
-            $item = Cart::whereIn('id_cart', $inputIds)->get();
-            $totalJumlah = $item->sum('total');
-            $orderItems = $this->saveOrderItems($item);
-            // // Membuat booking sebelum memanggil findNearestDriver
-            $booking = $this->createBooking($item, $request->kategori, $inputIds, $totalJumlah, $request->alamat_dari, $request->latitude_dari, $request->longitude_dari, $request->alamat_tujuan, $request->latitude_tujuan, $request->longitude_tujuan);
-            // cari driver
-            $nearestDriver = $this->findNearestDriver($request->latitude_dari, $request->longitude_dari, $booking->id_booking, $item);
             
-            // $this->deleteCartItems($item);
-    
-    
+            // Cari driver
+            $kategoriAsli = $request->kategori;
+            if($request->kategori == "resto"){
+                $request['kategori'] = "motor_manual";
+            }
+            $nearestDriver = $this->findNearestDriver($request->latitude_dari, $request->longitude_dari, $request->kategori);
+            
             if ($nearestDriver->original['data'] != null) {
-                $driver = User::where('id_user', $nearestDriver->original['data'] )->with('detailDriver')->get();
+                // Driver ditemukan, simpan data order
+                $booking = $this->createBooking($request->user_id, $request->ongkir, $kategoriAsli, $request->alamat_dari, $request->latitude_dari, $request->longitude_dari, $request->alamat_tujuan, $request->latitude_tujuan, $request->longitude_tujuan);
+    
+                if ($kategoriAsli == "resto") {
+                    $inputIds = explode(',', $request->id);
+                    $item = Cart::whereIn('id_cart', $inputIds)->get();
+                    $totalJumlah = $item->sum('total');
+                    $orderItems = $this->saveOrderItems($item);
+                    $booking->update([
+                        'resto_id' => $item->first()->toko_id,
+                        'produk_order' => implode(',', $inputIds),
+                        'total' => $totalJumlah + $request->ongkir,
+                    ]);
+                    $this->deleteCartItems($item);
+                } else {
+                    $booking->update([
+                        'total' => $request->ongkir,
+                    ]);
+                }
+    
+                // Simpan data driver pada booking
+                $driverData = $nearestDriver->original['data'];
+                $driverId = $driverData['driver_id'];
+                $latDriver = $nearestDriver->original['data']['data']['latitude'];
+                $longDriver = $nearestDriver->original['data']['data']['longitude'];
+                $origin = $latDriver.",".$longDriver;
+                $waypoints = $request->latitude_dari.",".$request->longitude_dari;
+                $destination= $request->latitude_tujuan.",".$request->longitude_tujuan;
+                $key = "AIzaSyDJYCwjovNkXpDiTgDi4G-jG5SlaZzOezs";
+                $routes = $this->trackingOrder($origin, $destination, $waypoints, $key);
+                $booking->update([
+                    "driver_id" =>$driverId,
+                    "routes" => $routes->original['data']
+                ]);
+    
+                // Simpan data driver terkini
+                $driver = DetailDriver::where('user_id', $driverId)->first();
+            
+                $driver->update([
+                    "latitude" => $latDriver,
+                    "longitude" => $longDriver,
+                ]);
+    
+                // Buat dan kirim notifikasi
+                $driver = User::find($driverId);
+                $title = 'Pesanan Baru';
+                $body = 'Kamu Mempunyai pesanan makanan baru. Kode: ' . $booking->id_order;
+                $driver->notify(new OrderNotification($title, $body, $booking->id_order));
+    
+                // Ambil data order dengan relasi
+                $order = Order::where('id_order', $booking->id_order)
+                    ->with('resto')
+                    ->with('detailResto')
+                    ->with('driver')
+                    ->with('detailDriver')->first();
+    
                 $response = [
                     'status' => true,
-                    'data' => $driver,
+                    'data' => $order,
                 ];
             } else {
+                // Driver tidak ditemukan
                 $response = [
                     'status' => false,
                     'data' => null,
@@ -85,20 +137,16 @@ class BookingController extends Controller
         }
     }
     
-    public function createBooking($items, $kategori, $inputIds, $totalJumlah, $alamatDari, $latDari, $longDari,$alamatTujuan, $latTujuan, $longTujuan)
+    public function createBooking($user_id ,$ongkir , $kategori, $alamatDari, $latDari, $longDari,$alamatTujuan, $latTujuan, $longTujuan)
     {
-        $firstItem = $items->first();
         $key = $this->generateKeyFromDatetime();
-        $subtotal = $totalJumlah + 3000 + 30000;
         return Order::create([
-            'id_booking' => $key,
-            'customer_id' => $firstItem->user_id,
-            'resto_id' => $firstItem->toko_id,
-            'produk_order' => implode(',', $inputIds),
+            'id_order' => $key,
             'status' => "0",
-            'ongkos_kirim' => '3000',
+            'ongkos_kirim' => $ongkir,
             'biaya_pesanan' => '3000',
-            'total' => $subtotal,
+            'total' => "0",
+            'customer_id' => $user_id,
             'kategori' => $kategori,
             'alamat_dari'=> $alamatDari,
             'longitude_dari'=> $longDari,
@@ -135,7 +183,7 @@ class BookingController extends Controller
         }
     }
 
-    public function findNearestDriver($latitude, $longitude, $bookingId, $items)
+    public function findNearestDriver($latitude, $longitude, $type)
     {
         $driversRef = $this->database->getReference('driver_active');
         $driversSnapshot = $driversRef->getSnapshot();
@@ -145,7 +193,7 @@ class BookingController extends Controller
         if ($driversSnapshot->exists()) {
             foreach ($driversSnapshot->getValue() as $driverId => $driverData) {
                 // Periksa status "active" driver
-                if ($driverData['status'] === 'active') {
+                if ($driverData['status'] === 'active' && $driverData['type'] === $type) {
                     $distance = $this->haversineDistance($latitude, $longitude, $driverData['latitude'], $driverData['longitude']);
         
                     if ($distance <= $maxDistance) {
@@ -160,13 +208,7 @@ class BookingController extends Controller
                 }
             }
             if ($nearestDriver) {
-                $firstItem = $items->first();
-                $driverData = $nearestDriver['driver_id'];
-                $driver = User::find($driverData);
-                $title = 'Pesanan Baru';
-                $body = 'Kamu Mempunyai pesanan makanan baru. Kode: ' . $bookingId;
-
-                // $driver->notify(new OrderNotification($title, $body, $bookingId));
+                $this->updateDriverStatus($nearestDriver['driver_id'], "waiting");
                 // simpan notif log
                 // app(NotificationController::class)->store($title, $body, $bookingId, $firstItem->user_id, $driverData);
 
@@ -200,10 +242,23 @@ class BookingController extends Controller
 
         return $distance;
     }
+    
+    private function updateDriverStatus($driverId, $status)
+    {
+        $driversRef = $this->database->getReference('driver_active');
+        $driver = $driversRef->getChild($driverId);
+        $driverData = $driversRef->getSnapshot();
+    
+        if ($driverData->exists()) {
+            $response = $driver->update([
+                'status' => $status,
+            ]);
+        }
+    }
 
     public function getById($id)
     {
-        $booking = Booking::where('id_booking', $id)->with('detailResto')->first();
+        $booking = Order::where('id_order', $id)->with('detailResto')->first();
         if (!$booking) {
             $response = [
                 'status' => false,
@@ -213,7 +268,7 @@ class BookingController extends Controller
         }
         
         // Lanjutkan dengan logika Anda
-        $jarak = $this->haversineDistance($booking->detailResto->latitude, $booking->detailResto->longitude, $booking->latitude_tujuan, $booking->longitude_tujuan);
+        $jarak = $this->haversineDistance($booking->latitude_dari, $booking->longitude_dari, $booking->latitude_tujuan, $booking->longitude_tujuan);
         $response = [
             'status' => true,
             'jarak' => round($jarak),
@@ -278,5 +333,88 @@ class BookingController extends Controller
         }
         
         return response()->json('Booking tidak ditemukan', [], Response::HTTP_NOT_FOUND);
+    }
+    
+    public function cekBooking($id)
+    {
+        $order = Order::where('driver_id', $id)->whereIn('status', ["0"])
+        ->with('resto')
+        ->with('detailResto')
+        ->with('driver')
+        ->with('detailDriver')
+        ->with('customer')
+        ->with('detailCustomer')
+        ->first();
+        
+        
+        if ($order->count() > 0) {
+            $hitungJarak = $this->haversineDistance($order->latitude_dari, $order->longitude_dari, $order->latitude_tujuan, $order->longitude_tujuan);
+            $jarak = round($hitungJarak);
+            // Jika ada
+            $response = [
+                'status' => true,
+                'jarak' => $jarak,
+                'data' => $order,
+            ];
+            return response()->json($response, Response::HTTP_OK);
+        }else{
+            $response = [
+                'status' => false,
+                'jarak' => $jarak,
+                'data' => [],
+            ];
+            return response()->json($response, Response::HTTP_OK);
+        }
+    }
+
+    public function trackingOrder($origin, $destination, $waypoints, $key)
+    {
+        $client = new Client();
+        $routes = $client->get('https://maps.googleapis.com/maps/api/directions/json', [
+            'query' => [
+                'origin' => $origin,
+                'destination' => $destination,
+                'waypoints' => $waypoints,
+                'key' => $key,
+                'mode' => 'driving',
+                'units' => 'imperial',
+            ],
+        ]);
+        $data = json_decode($routes->getBody(), true);
+        return response()->json(["data" => $data], Response::HTTP_CREATED);
+
+    }
+    
+    public function updateStatus(Request $request)
+    {
+        $order = Order::where('id_order', $request->id)->first();
+        $order->update([
+            'status' => $request->status
+        ]);
+        if($request->status == "7"){
+            $this->updateDriverStatus($request->driver_id, "busy");
+        }
+        if($request->status == "0")
+        {
+            if ($order->resto_id != null) {
+                $restoTitle = 'Pesanan Baru';
+                $restoBody = 'Kamu mempunyai pesanan produk baru ' . $order->id_order;
+                $resto->notify(new OrderNotification($restoTitle, $restoBody, $order->id_order));
+                // simpan notif log
+                app(NotificationController::class)->store($restoTitle, $restoBody, $order->id_order, $request->driver_id, order->resto_id);
+                
+            }
+            $customerTitle = 'Pesanan Diterima';
+            $customerBody = 'Pesanan (' . $order->id_order . ') kamu diterima. Driver sedang menuju ke Toko.';
+            $customer->notify(new OrderNotification($customerTitle, $customerBody, $order->id_order));
+            // simpan notif log
+            app(NotificationController::class)->store($customerTitle, $customerBody, $order->id_order, $request->driver_id, $order->customer_id);
+        }
+        
+        $response = [
+            'status' => true,
+            'message' => 'Berhasil',
+        ];
+        return response()->json($response, Response::HTTP_OK);
     }
 }

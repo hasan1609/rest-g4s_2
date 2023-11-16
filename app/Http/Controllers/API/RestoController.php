@@ -213,6 +213,7 @@ class RestoController extends Controller
     public function restoTerdekat($lat, $long)
     {
         $resto = DetailResto::select('*', DB::raw('ROUND((6371 * acos(cos(radians(' . $lat . ')) * cos(radians(latitude)) * cos(radians(longitude) - radians(' . $long . ')) + sin(radians(' . $lat . ')) * sin(radians(latitude)))), 2) AS distance'))
+            ->where('status_toko', '=', 'buka')
             ->having('distance', '<', 5)
             ->with('user')
             ->with('produk')

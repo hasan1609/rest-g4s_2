@@ -12,6 +12,7 @@ use App\Http\Controllers\API\ReviewController;
 use App\Http\Controllers\API\BookingController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\OrderController;
+use App\Http\Controllers\API\OngkirController;
 
 
 /*
@@ -29,10 +30,19 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+
+// UPDATE PASSWORD
+Route::post('/update-password', [AuthController::class, 'changePassword']);
+
 // CUSTOMER
 // ADD CUSTOMER
 Route::post('/customer', [CustomerController::class, 'register']);
-
+// LOGIN
+Route::post('/login/customer', [AuthController::class, 'customerLogin']);
+// GET DETAIL
+Route::get('/customer/{id}', [CustomerController::class, 'getDetail']);
+// EDIT CUSTOMER BY ID
+Route::post('/customer/{id}', [CustomerController::class, 'updateData']);
 
 // RESTO 
 // GET ALL RESTO
@@ -92,6 +102,8 @@ Route::get('count/kategori/{id}', [ProdukController::class, 'getCount']);
 
 // GET REVIEW BY ID RESTO
 Route::get('review/resto/{id}', [ReviewController::class, 'getReviewByIdResto']);
+// GET REVIEW BY ID DRIVER
+Route::get('review/driver/{id}', [ReviewController::class, 'getReviewByIdDriver']);
 
 // CART
 // GET COUNT CART
@@ -105,16 +117,16 @@ Route::post('cart/{id}/{user}', [CartController::class, 'destroy']);
 // hapus cart by id cart
 Route::post('item/cart/{id}', [CartController::class, 'destroyItem']);
 // get count cart with resto
-Route::get('cart/item/{id}/{user}', [CartController::class, 'show']);
+Route::get('cart/item/{id}/{user}/{lat}/{long}', [CartController::class, 'show']);
 
 // BOOKING
+
+// ORDER
 Route::post('booking', [BookingController::class, 'store']);
 //  getby id
 Route::get('booking/{id}', [BookingController::class, 'getById']);
 // update status terima order toko
 Route::post('booking/resto/terima/{id}', [BookingController::class, 'terimaBooking']);
-
-// ORDER
 // get by id Resto
 Route::get('order/resto/{id}', [OrderController::class, 'getByIdResto']);
 // get by id Resto
@@ -123,9 +135,19 @@ Route::get('order/customer/{id}', [OrderController::class, 'getByIdCustomer']);
 Route::get('order/driver/{id}', [OrderController::class, 'getByIdDriver']);
 // get produk id produk
 Route::get('order/detail/{id}', [OrderController::class, 'getDetailLogOrder']);
+// get route
+Route::post('tracking/routes', [BookingController::class, 'trackingOrder']);
+// update status
+Route::post('order/status', [BookingController::class, 'updateStatus']);
+// cek booking
+Route::get('order/cek/{id}', [BookingController::class, 'cekBooking']);
 
 // NOTIFIKASi
 //  getby id
 Route::get('notifikasi/{id}', [NotificationController::class, 'getById']);
 //  update status
 Route::post('notifikasi/{id}', [NotificationController::class, 'updateStatus']);
+
+// ONGKIR
+//get ongkir
+Route::post('ongkir', [OngkirController::class, 'getOngkirAll']);

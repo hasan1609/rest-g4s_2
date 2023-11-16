@@ -31,6 +31,16 @@ class Review extends Model
         return $this->belongsTo(User::class,'customer_id', 'id_user');
     }
 
+    public function userDriver()
+    {
+        return $this->belongsTo(User::class,'driver_id', 'id_user');
+    }
+
+    public function userResto()
+    {
+        return $this->belongsTo(User::class,'resto_id', 'id_user');
+    }
+
     public function resto()
     {
         return $this->belongsTo(DetailResto::class, 'resto_id', 'user_id');

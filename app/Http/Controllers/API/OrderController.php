@@ -10,6 +10,7 @@ use App\Models\DetailResto;
 use App\Models\DetailCustomer;
 use App\Models\User;
 use App\Models\Produk;
+use App\Models\Saldo;
 use App\Models\OrderResto;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -59,8 +60,8 @@ class OrderController extends Controller
         $orders = Order::where('customer_id',$id)
             ->with('driver')->with('detailDriver')
             ->with('resto')->with('detailResto')
-            ->with('customer')->with('detailCustomer')
             ->with('review')
+            ->orderBy('created_at')
             ->get();
             
         $idCountsPerOrder = [];
@@ -86,8 +87,12 @@ class OrderController extends Controller
         $orders = Order::where('driver_id',$id)
             ->with('customer')->with('detailCustomer')
             ->with('resto')->with('detailResto')
+            ->with('driver')->with('detailDriver')
             ->with('review')
+            ->orderBy('created_at')
             ->get();
+
+        $saldo = Saldo::where('user_id', $id)->first();
             
         $idCountsPerOrder = [];
 
@@ -105,7 +110,7 @@ class OrderController extends Controller
             $tanggalPesanan = date('Y-m-d', strtotime($order->created_at));
 
             // Jika tanggal pesanan sama dengan tanggal hari ini, tambahkan ongkos kirim ke total
-            if ($tanggalPesanan === $tanggalHariIni) {
+            if ($tanggalPesanan == $tanggalHariIni && $order->status == "5") {
                 $pendapatan += $order->ongkos_kirim;
             }
         }
@@ -113,7 +118,8 @@ class OrderController extends Controller
             'status' => true,
             'message' => 'Berhasil',
             'data' => $idCountsPerOrder,
-            'pendapatan' => $pendapatan
+            'pendapatan' => $pendapatan,
+            'saldo' => $saldo
         ];
 
         return response()->json($response, Response::HTTP_OK);
@@ -127,6 +133,7 @@ class OrderController extends Controller
             ->with('customer')->with('detailCustomer')
             ->with('resto')->with('detailResto')
             ->with('review')
+            ->orderBy('created_at')
             ->first();
         $totalJumlah = $order->total + $order->biaya_pesanan + $order->ongkos_kirim;
 
